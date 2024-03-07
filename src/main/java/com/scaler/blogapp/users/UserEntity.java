@@ -12,6 +12,7 @@ import org.springframework.lang.Nullable;
 @RequiredArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
+@Builder
 public class UserEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE)
@@ -21,6 +22,10 @@ public class UserEntity {
     @Column(nullable = false)
     @NonNull
     private String username;
+
+    @Column(nullable = false)
+    @NonNull
+    private String password;
 
     @Column(nullable = false)
     @NonNull

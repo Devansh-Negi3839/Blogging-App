@@ -1,23 +1,30 @@
 package com.scaler.blogapp.users;
 
+import com.scaler.blogapp.security.JWTService;
 import com.scaler.blogapp.users.dtos.CreateUserRequest;
 import org.apache.catalina.User;
 import org.modelmapper.ModelMapper;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
 public class UsersService {
     private final UsersRepository usersRepository;
     private final ModelMapper modelMapper;
+    private final PasswordEncoder passwordEncoder;
 
-    public UsersService(UsersRepository usersRepository, ModelMapper modelMapper) {
+    public UsersService(UsersRepository usersRepository, ModelMapper modelMapper, PasswordEncoder passwordEncoder) {
         this.usersRepository = usersRepository;
         this.modelMapper = modelMapper;
+        this.passwordEncoder = passwordEncoder;
     }
 
     public UserEntity createUser(CreateUserRequest request) {
         UserEntity newUser = modelMapper.map(request, UserEntity.class);
-        // TODO: encrypt and save password as well
+        newUser.setPassword(passwordEncoder.encode(request.getPassword()));
+
+
+        //
 //        var newUser=UserEntity.builder()
 //                .username(request.getUsername())
 ////                .password(request.getPassword())
@@ -37,7 +44,9 @@ public class UsersService {
 
     public UserEntity loginUser(String username, String password) {
         var user = usersRepository.findByUsername(username).orElseThrow(() -> new UserNotFoundException(username));
-        //TODO:match password
+        var passMatch=passwordEncoder.matches(password,user.getPassword());
+        if (!passMatch)
+            throw new InvalidCredentialsException();
         return user;
     }
 
@@ -49,6 +58,12 @@ public class UsersService {
 
         public UserNotFoundException(Long userId) {
             super("User with userId: " + userId + " not found");
+        }
+    }
+
+    public  static class InvalidCredentialsException extends IllegalArgumentException{
+        public InvalidCredentialsException(){
+            super("Invalid username or password combination");
         }
     }
 }
